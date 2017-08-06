@@ -2,8 +2,10 @@ const gulp = require('gulp');
 const fs = require('fs');
 const runSequence = require('run-sequence');
 const rimraf = require('rimraf');
-var del = require('del')
+const del = require('del')
 const shell = require('gulp-shell')
+const rename = require("gulp-rename");
+const myConvert = require('./gulp-myconvert');
  
 gulp.task('hello', function() {
   console.log('Hello gulp!');
@@ -21,31 +23,17 @@ gulp.task('build_angular', () => {
 })
 
 
-gulp.task('convert_indexhtml', function() {
-  console.log('<<<<<convert_indexhtml start>>>>>>>');
 
-     gulp.src( './dist/index.html')
-    .pipe(fs.readFile("./dist/index.html", "utf-8", (err, _data) => {
-
-        console.log( _data );
-        const num = _data.indexOf("<head>");
-        console.log(num);
-        const string_begin = _data.slice(0,num +6);
-        console.log(string_begin);
-        console.log("-----------");
-        const string_after = _data.slice(num +6);
-        console.log(string_after);
-
-        const converted_string = string_begin + " \n\n  <%= @ogp_data %> \n\n " + string_after;
-
-        console.log(converted_string);
-
-        fs.writeFileSync("./dist/index.ect",converted_string);;
-    }))
-
+gulp.task('convert', function() {
+    console.log("convert");
+    return gulp.src([
+        './dist/index.html'
+    ])
+    .pipe(myConvert())
+    .pipe(rename('index.ect'))
+    .pipe(gulp.dest('./dist'))
 
 });
- 
 
 
 gulp.task('transfer_convertedfile', ()=>{
@@ -81,7 +69,7 @@ gulp.task('transfer_dist_to_public', ()=>{
 // http://blog.anatoo.jp/entry/20140420/1397995711 
 
 gulp.task('build', function() {
-  runSequence('build_angular', 'convert_indexhtml');
+  runSequence('build_angular', 'convert', 'transfer_convertedfile',  'transfer_dist_to_public');
 });
 
 gulp.task('move', function() {
